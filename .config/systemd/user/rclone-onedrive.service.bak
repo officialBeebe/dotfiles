@@ -1,0 +1,33 @@
+[Unit]
+Description=Rclone mount for OneDrive
+Documentation=https://rclone.org/onedrive/
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStartPre=/bin/mkdir -p %h/.remote/OneDrive
+ExecStartPre=/usr/bin/rclone about OneDrive:
+ExecStartPre=/bin/sleep 5
+ExecStart=/usr/bin/rclone mount OneDrive: %h/.remote/OneDrive \
+  --vfs-cache-mode full \
+  --vfs-cache-max-size 20G \
+  --vfs-cache-max-age 336h \
+  --vfs-read-chunk-size 64M \
+  --vfs-read-chunk-size-limit 1G \
+  --buffer-size 64M \
+  --dir-cache-time 72h \
+  --poll-interval 15s \
+  --timeout 1h \
+  --umask 022 \
+  --allow-other \
+  --rc \
+  --log-level INFO
+ExecStop=/bin/fusermount -uz %h/.remote/OneDrive
+WorkingDirectory=%h
+Environment=RCLONE_CONFIG=/home/dylan/.config/rclone/rclone.conf
+Restart=on-failure
+RestartSec=15
+
+[Install]
+WantedBy=default.target
